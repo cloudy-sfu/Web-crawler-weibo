@@ -114,6 +114,4 @@ dmypy.json
 .pyre/
 
 .idea
-.old
-posts.sqlite
-login_ubuntu.py
+posts.db

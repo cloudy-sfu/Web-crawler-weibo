@@ -1,47 +1,34 @@
 # "weibo.com" Web Crawler
 
- A web crawler for "weibo.com" posts
+ The toolbox to collect posts from https://weibo.com
 
-![](https://shields.io/badge/OS-Microsoft%20Windows%2010%2064--bit-lightgray.svg)
-![](https://shields.io/badge/dependencies-Google%20Chrome%20>=%2096-blue.svg)
-![](https://shields.io/badge/dependencies-Python%203.9-blue.svg)
-![](https://shields.io/badge/tests-Google%20Chrome%2096%20✔-brightgreen.svg)
-
-## Introduction
-
-This script helps collect attributes of posts at "weibo.com". Users can record posts in different lists (or flows, or collections), like the searching results. The supported lists (or flows, or collections) are listed in "Functions" section.
+![](https://shields.io/badge/OS-Windows_10_64--bit-lightgray)
+![](https://shields.io/badge/dependencies-Google_Chrome>=96-blue)
+![](https://shields.io/badge/dependencies-Python_3.11-blue)
+![](https://shields.io/badge/tests-Google_Chrome_113_✔-brightgreen)
 
 ## Usage
 
-Run
+1. Run the following script.
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-pip install -r requirements.txt
-```
+2. Login https://weibo.com/ in Google Chrome, and don't close it. <br>
+   *We assume Google Chrome is installed in default path. Otherwise, please modify Line 34 and 37 and assign these two variables to your customized cookies and encryption key respectively.*
 
-Login "weibo.com" in browser, and don't close the browser. 
+3. Run `login_windows.py`. By default, it creates a database at `posts.db`. *The file path can be customized with `db` argument. [Detail](docs/login_windows.md)*
 
-Then, if you installed Google Chrome in default folder, run `login_windows.py`. Otherwise, you will find it useful to modify Line 34 and 37. Please assign these two variables to cookies and encryption key respectively.
+4. Close the browser.
 
-After that, close the browser.
-
-Now, it's free to use functions listed below.
+5. The following functions work for you now.
 
 ## Functions
 
-### 1.  Search for posts
+[login_windows](docs/login_windows.md)
 
-**Filename:** `search.py`
+Log in https://weibo.com and save logged-in status, with Windows platform.
 
-**Description:** This script searches for a word and a specific time period.  It records all the searching result in SQLite database.
+[search](docs/search.md)
 
-**Parameters:**
-
-| Name            | Description                                                                                    |
-| --------------- | ---------------------------------------------------------------------------------------------- |
-| `search_string` | The string to search for. All posts containing this string will be recorded, 50 pages at most. |
-| `start_time`    | Only posts which are posted after this time will be recorded. (Accurate to hour level)         |
-| `end_time`      | Only posts which are posted before this time will be recorded. (Accurate to hour level)        |
-| `rest_time`     | The interval between two requests, where the unit is second.                                   |
-
-Results are saved in SQLite database `posts.sqlite`.
+Searches for a word and a specific time period.  It records all the searching result in SQLite database.

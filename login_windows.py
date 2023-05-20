@@ -59,7 +59,7 @@ def chrome_utc_parser(chrome_utc):
         return pd.to_datetime(real_utc, unit='s')
 
 
-if __name__ == '__main__':
+def main(db):
     connection = sqlite3.connect(cookie_file)
     cookies = pd.read_sql_query('SELECT * FROM cookies', connection)
     cookies_weibo_related = cookies[cookies.host_key.str.contains('weibo.com')]
@@ -68,5 +68,9 @@ if __name__ == '__main__':
         'value': cookies_weibo_related['encrypted_value'].apply(cookies_decrypt),
         'expired_utc': cookies_weibo_related['expires_utc'].apply(chrome_utc_parser),
     })
-    connection_1 = sqlite3.connect('posts.sqlite')
+    connection_1 = sqlite3.connect(db)
     cookies_weibo_cleaned.to_sql('cookies', connection_1, index=False, if_exists='replace')
+
+
+if __name__ == '__main__':
+    main(db="posts.db")
