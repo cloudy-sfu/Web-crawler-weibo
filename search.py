@@ -1,4 +1,5 @@
 import random
+import string
 import re
 import sqlite3
 from time import sleep
@@ -7,37 +8,57 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from requests import Session
 from tqdm import tqdm
+from argparse import ArgumentParser
 
 sess = Session()
 sess.trust_env = False
+parser = ArgumentParser()
+parser.add_argument('--db', type=str, default='./posts.db',
+                    help='The path of the database, where to store the cookies and fetched posts. If blank, data is '
+                         'saved at posts.db of this program\'s root directory.')
+parser.add_argument('--query', type=str,
+                    help='Search query submitted to https://weibo.com All posts containing this string will be '
+                         'recorded, 50 pages at most.')
+parser.add_argument('--start_time', type=str,
+                    help='Format code: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format'
+                         '-codes\n'
+                         'Posts from this hour will be collected. The time zone is the same as https://weibo.com '
+                         'server. Date format is \'%Y-%m-%d-%H\'.')
+parser.add_argument('--end_time', type=str,
+                    help='Posts till this hour will be collected. The format is the same as \'start_time\'.')
+parser.add_argument('--max_page', type=int,
+                    help='The maximum page to collect. If existed pages are less than this number, the result will be '
+                         'fewer.')
+command, _ = parser.parse_known_args()
 
 
 def get_first_page(search_string, header, st, et, rest_time=(2, 5)):
     url = f"https://s.weibo.com/weibo?q={quote(search_string)}&typeall=1&suball=1&timescope=custom%3A" \
-          f"{st[0]}-{st[1]}-{st[2]}-{st[3]}%3A{et[0]}-{et[1]}-{et[2]}-{et[3]}&Refer=g"
+          f"{st}%3A{et}&Refer=g"
     response = sess.get(url, headers=header, verify=True)
-    assert response.status_code == 200, f'Response code is {response.status_code} for {url}'
+    assert response.status_code == 200, (
+        f'[Error] Cannot retrieve the first page {url}\nResponse code {response.status_code}.')
     sleep(round(random.uniform(rest_time[0], rest_time[1]), 2))
     response = BeautifulSoup(response.text, features='html.parser')
-    assert response, f'Cannot parse webpage {url}'
-    max_page = response.find('ul', {'node-type': 'feed_list_page_morelist', 'action-type': 'feed_list_page_morelist'})
+    assert response, f'[Error] Cannot retrieve the first page {url}'
+    max_page = response.find('ul', {
+        'node-type': 'feed_list_page_morelist', 'action-type': 'feed_list_page_morelist'
+    })
     max_page = len(max_page.find_all('li')) if max_page else 1
     return response, max_page
 
 
 def get_subseq_page(search_string, header, st, et, page, rest_time=(2, 5)):
     url = f"https://s.weibo.com/weibo?q={quote(search_string)}&typeall=1&suball=1&timescope=custom:" \
-          f"{st[0]}-{st[1]}-{st[2]}-{st[3]}:{et[0]}-{et[1]}-{et[2]}-{et[3]}&Refer=g&page={page}"
+          f"{st}:{et}&Refer=g&page={page}"
     response = sess.get(url, headers=header, verify=True)
     if response.status_code != 200:
-        print(f"[Warning] Fail to fetch page (response code {response.status_code}).")
-        print("[Warning] ", url)
+        print(f"[Warning] Fail to fetch page {url}\nResponse code {response.status_code}.")
         return
     sleep(round(random.uniform(rest_time[0], rest_time[1]), 2))
     response = BeautifulSoup(response.text, features='html.parser')
     if not response:
-        print("[Warning] Fail to parse page.")
-        print("[Warning] ", url)
+        print(f"[Warning] Fail to parse page {url}")
         return
     return response
 
@@ -116,15 +137,19 @@ def get_posts(web_text, header, db, table, rest_time=(2, 5)):
     posts_df = pd.DataFrame(data=posts_df,
                             columns=['avatar', 'nickname', 'user_id', 'posted_time', 'source', 'weibo_id', 'content',
                                      'reposts', 'comments', 'likes'])
-    connection = sqlite3.connect(db)
-    posts_df.to_sql(table, connection, if_exists='append', index=False)
-    connection.close()
+    c = sqlite3.connect(db)
+    posts_df.to_sql(table, c, if_exists='append', index=False)
+    c.close()
 
 
-def search(db, table, query, start_time, end_time, max_page=None):
-    connection = sqlite3.connect(db)
-    cookies = pd.read_sql_query('select * from cookies', connection)
-    connection.close()
+def search(db, query, start_time, end_time, max_page=None):
+    table = ''.join(random.choice(string.ascii_letters) for _ in range(16))
+    meta = pd.DataFrame([{'query': query, 'start_time': start_time, 'end_time': end_time, 'table': table}])
+
+    c = sqlite3.connect(db)
+    cookies = pd.read_sql_query('select * from cookies', c)
+    meta.to_sql(name='search', con=c, index=False, if_exists='append')
+    c.close()
 
     cookies = dict(zip(cookies.name, cookies.value))
     cookies = '; '.join([f'{k}={v}' for k, v in cookies.items()])
@@ -155,3 +180,7 @@ def search(db, table, query, start_time, end_time, max_page=None):
             get_posts(db=db, table=table, header=chrome_113, web_text=response)
         pbar.update(1)
     pbar.close()
+
+
+if __name__ == '__main__':
+    search(**vars(command))
