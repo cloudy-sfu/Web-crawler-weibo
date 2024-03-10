@@ -2,10 +2,9 @@
 
  The toolbox to collect posts from https://weibo.com
 
-![](https://shields.io/badge/dependencies-Python_3.11-blue?style=flat-square)
-![](https://shields.io/badge/dependencies-Google_Chrome_≥_114-blue?style=flat-square)
-![](https://shields.io/badge/tests-Google_Chrome_117_✔-brightgreen?style=flat-square)
-![](https://shields.io/badge/OS-Windows_10_64--bit-lightgray?style=flat-square)
+![](https://shields.io/badge/dependencies-Python_3.11-blue)
+![](https://shields.io/badge/dependencies-Google_Chrome_117-blue)
+![](https://shields.io/badge/OS-Windows_10_64--bit-lightgray)
 
 ## Debug
 
@@ -20,27 +19,29 @@ Contribution is open to Linux and other operation systems and browsers' login sc
 1. Searching non-Chinese strings will usually return nothing, because "Weibo" is a Chinese social media. 
 2. There are several hours' delay before posts appear in the search engine. It's better to search posts 2 days ago.
 
-## Minimum example
-
-Search posts containing "GitHub" at 11:00-12:00 (UTC+8) on August 15, 2023. Retrieve at most 2 pages (10 posts per page).
-
-Run the following command.
-
-```bash
-pip install -r requirements.txt
-python login_windows.py
-python search.py --query="GitHub" --start_time=2023-08-15-11 --end_time=2023-08-15-12 --max_page=2
-```
-
-If you find errors or need customization, please read the "usage" section.
-
 ## Usage
+
+If it's the first time to use this program, please create a Python virtual environment and run
+
+```
+pip install -r requirements.txt
+```
 
 In the minimum example, I assume the computer has installed Google Chrome in the default path. If Google Chrome is installed, but in the customized path, please run the following command and set `chrome_user_data` manually.
 
+Run `python login_windows.py` and follow the instructions in the command line. This step requires a graphic operation system, because the user have to open a web browser and login "weibo". Other steps can be implemented in a non-graphic operation system.
+
+---
+
+**Minimum example**
+
+Search posts containing "GitHub" at 11:00-12:00 (UTC+8) on August 15, 2023. Retrieve at most 2 pages (10 posts per page).
+
+```bash
+python search.py --query="GitHub" --start_time=2023-08-15-11 --end_time=2023-08-15-12 --max_page=2
 ```
-python login_windows.py --help
-```
+
+---
 
 For more search options, see
 
